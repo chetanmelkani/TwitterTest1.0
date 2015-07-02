@@ -29,8 +29,8 @@ import java.util.List;
 public class MainActivity extends ActionBarActivity {
 
     // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
-    private static final String TWITTER_KEY = "qNizIPfaX8roLVrSrAZGpU7E4";
-    private static final String TWITTER_SECRET = "EpysrKBXtYOtRMM6HEdWfAAfLtFRaQxxFl34IeenWDRpIi1CgQ";
+    private static final String TWITTER_KEY = "";
+    private static final String TWITTER_SECRET = "";
     private TwitterLoginButton loginButton;
 
 
