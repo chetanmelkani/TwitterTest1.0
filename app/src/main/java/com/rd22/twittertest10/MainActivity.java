@@ -15,6 +15,8 @@ import twitter4j.auth.AccessToken;
 import twitter4j.conf.ConfigurationBuilder;
 
 import android.content.Intent;
+import android.view.View;
+
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterException;
@@ -27,8 +29,8 @@ import java.util.List;
 public class MainActivity extends ActionBarActivity {
 
     // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
-    private static final String TWITTER_KEY = "";
-    private static final String TWITTER_SECRET = "";
+    private static final String TWITTER_KEY = "qNizIPfaX8roLVrSrAZGpU7E4";
+    private static final String TWITTER_SECRET = "EpysrKBXtYOtRMM6HEdWfAAfLtFRaQxxFl34IeenWDRpIi1CgQ";
     private TwitterLoginButton loginButton;
 
 
@@ -96,6 +98,21 @@ public class MainActivity extends ActionBarActivity {
                 System.out.println("The user failed to log in");
             }
         });
+    }
+
+    public void showText(View view){
+        System.out.println("in showText: ");
+        Intent intent = new Intent(MainActivity.this, ShowTextActivity.class);
+        intent.putExtra("key", "test value"); //Optional parameters
+        this.startActivity(intent);
+    }
+
+    public void nfcActivity(View view){
+        System.out.println("in nfcActivity");
+
+        Intent intent = new Intent(MainActivity.this, NFCActivity.class);
+        intent.putExtra("key", "test value"); //Optional parameters
+        this.startActivity(intent);
     }
 
     @Override
