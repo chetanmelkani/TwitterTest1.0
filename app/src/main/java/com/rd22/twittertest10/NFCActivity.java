@@ -5,15 +5,21 @@ import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.NfcEvent;
+import android.nfc.Tag;
+import android.nfc.tech.MifareUltralight;
 import android.os.Parcelable;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
 
 import static android.nfc.NdefRecord.createMime;
 
@@ -22,9 +28,11 @@ public class NFCActivity extends ActionBarActivity implements NfcAdapter.CreateN
 
     NfcAdapter mNfcAdapter;
     TextView textView;
+    Tag tagFromIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        System.out.println("in :: NFCActivity.onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_nfc);
         TextView textView = (TextView) findViewById(R.id.textView);
@@ -41,7 +49,7 @@ public class NFCActivity extends ActionBarActivity implements NfcAdapter.CreateN
     }
 
     public void triggerTransfer(View view){
-        System.out.println("in triggerTransfer");
+        System.out.println("in :: NFCActivity.triggerTransfer");
 
     }
 
@@ -70,6 +78,8 @@ public class NFCActivity extends ActionBarActivity implements NfcAdapter.CreateN
     @Override
     public NdefMessage createNdefMessage(NfcEvent nfcEvent) {
 
+        System.out.println("in :: NFCActivity.createNdefMessage");
+
         String text = ("Beam me up, Android!\n\n" +
                 "Beam Time: " + System.currentTimeMillis());
         NdefMessage msg = new NdefMessage(
@@ -92,6 +102,7 @@ public class NFCActivity extends ActionBarActivity implements NfcAdapter.CreateN
     public void onResume() {
         super.onResume();
         // Check to see that the Activity started due to an Android Beam
+        System.out.println("in :: NFCActivity.onResume");
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
             processIntent(getIntent());
         }
@@ -100,6 +111,8 @@ public class NFCActivity extends ActionBarActivity implements NfcAdapter.CreateN
     @Override
     public void onNewIntent(Intent intent) {
         // onResume gets called after this to handle the intent
+        System.out.println("in :: NFCActivity.onNewIntent");
+        tagFromIntent = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         setIntent(intent);
     }
 
@@ -107,6 +120,7 @@ public class NFCActivity extends ActionBarActivity implements NfcAdapter.CreateN
      * Parses the NDEF Message from the intent and prints to the TextView
      */
     void processIntent(Intent intent) {
+        System.out.println("in :: NFCActivity.processIntent");
         textView = (TextView) findViewById(R.id.textView);
         Parcelable[] rawMsgs = intent.getParcelableArrayExtra(
                 NfcAdapter.EXTRA_NDEF_MESSAGES);
@@ -114,5 +128,52 @@ public class NFCActivity extends ActionBarActivity implements NfcAdapter.CreateN
         NdefMessage msg = (NdefMessage) rawMsgs[0];
         // record 0 contains the MIME type, record 1 is the AAR, if present
         textView.setText(new String(msg.getRecords()[0].getPayload()));
+    }
+
+    private static final String TAG = NFCActivity.class.getSimpleName();
+
+    public void writeTag(Tag tag, String tagText) {
+        MifareUltralight ultralight = MifareUltralight.get(tag);
+        try {
+            ultralight.connect();
+            ultralight.writePage(4, "abcd".getBytes(Charset.forName("US-ASCII")));
+            ultralight.writePage(5, "efgh".getBytes(Charset.forName("US-ASCII")));
+            ultralight.writePage(6, "ijkl".getBytes(Charset.forName("US-ASCII")));
+            ultralight.writePage(7, "mnop".getBytes(Charset.forName("US-ASCII")));
+        } catch (IOException e) {
+            Log.e(TAG, "IOException while closing MifareUltralight...", e);
+        } finally {
+            try {
+                ultralight.close();
+            } catch (IOException e) {
+                Log.e(TAG, "IOException while closing MifareUltralight...", e);
+            }
+        }
+    }
+
+    public String readTag(Tag tag) {
+        MifareUltralight mifare = MifareUltralight.get(tag);
+        try {
+            mifare.connect();
+            byte[] payload = mifare.readPages(4);
+            return new String(payload, Charset.forName("US-ASCII"));
+        } catch (IOException e) {
+            Log.e(TAG, "IOException while writing MifareUltralight message...", e);
+        } finally {
+            if (mifare != null) {
+                try {
+                    mifare.close();
+                }
+                catch (IOException e) {
+                    Log.e(TAG, "Error closing tag...", e);
+                }
+            }
+        }
+        return null;
+    }
+
+    public void writeNFC(View view) {
+        System.out.println("in :: writeNFC");
+                writeTag(tagFromIntent, "");
     }
 }
